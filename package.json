@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "mongodb": "^7.0.0",
     "zod": "^4.2.1"
   }
 }
