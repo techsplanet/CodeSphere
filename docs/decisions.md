@@ -1,9 +1,9 @@
 
-# Architectural Decisions Records (ADR)
+# Architectural Decision Records (ADR)
 
 This document records key architectural decisions made during the development of CodeSphere, along with their reasoning.
 
-The goal is to make decisions **explicit, reviewable, and explainable**.
+The goal is to make decisions **explicit, reviewable, and explainable**, both for future maintainers and external reviewers.
 
 ---
 
@@ -20,7 +20,7 @@ Adopt a monorepo with `apps/` and `packages/`.
 
 **Alternatives Considered**
 
-- Multiple repos → rejected due to coordination overhead
+- Multiple repositories → rejected due to coordination overhead
 
 ---
 
@@ -31,14 +31,15 @@ Define domain contracts in `packages/shared-types` before implementing features.
 
 **Reasoning**
 
-- Prevents type drift between UI, APIs, and database
-- Enables safe evolution of persistence and services
-- Makes system semantics explicit
+- Prevents type drift between UI, APIs, and persistence
+- Enables safe evolution of database and services
+- Makes system semantics explicit and reviewable
 
 **Outcome**
 
 - Domain meaning is frozen early
 - Implementations conform to contracts, not the reverse
+- Zod schemas act as the single source of truth
 
 ---
 
@@ -50,16 +51,16 @@ Use the official MongoDB Node.js driver instead of Mongoose.
 **Reasoning**
 
 - Domain contracts already exist (no need for ODM schemas)
-- Avoids runtime incompatibilities with Edge
-- Prevents schema duplication
+- Avoids runtime incompatibilities with Edge environments
+- Prevents schema duplication between ODM and domain layer
 - Improves hot-reload behavior during development
 
 **Trade-offs**
 
-- Manual schema alignment required
-- More explicit repository logic
+- Manual document-to-domain mapping required
+- Repository logic becomes more explicit
 
-This trade-off is intentional.
+This trade-off is intentional to gain architectural clarity and control.
 
 ---
 
@@ -70,47 +71,69 @@ All database access must go through repositories.
 
 **Reasoning**
 
-- Prevents database leakage into UI and APIs
+- Prevents database-specific concepts from leaking upward
 - Enforces domain-safe data flow
-- Enables future database replacement
+- Centralizes persistence behavior
+- Enables future database replacement without refactoring UI or APIs
 
 **Rules**
 
-- No ObjectId exposure
-- No DB queries in routes or components
-- Repositories return domain contracts only
+- No `ObjectId` exposure outside repositories
+- No database queries in routes or components
+- Repositories return validated domain contracts only
 
 ---
 
 ## ADR-005: Database Infrastructure Inside apps/web (V1)
 
 **Decision**
-Place MongoDB connection logic in `apps/web/lib/db`.
+Place MongoDB connection logic in `apps/web/lib/db` for Version 1.
 
 **Reasoning**
 
-- Only one consumer exists in V1
-- Avoids premature shared infrastructure
-- Keeps iteration speed high
+- Only a single consumer exists in V1
+- Avoids premature shared infrastructure extraction
+- Keeps iteration speed high while maintaining clean boundaries
 
 **Future Plan**
 
-- Extract to `packages/db` once multiple consumers exist
+- Extract database infrastructure to `packages/db` once multiple consumers exist
+- Reuse repositories without architectural changes
 
 ---
 
 ## ADR-006: Soft Deletes for Identity Data
 
 **Decision**
-Never hard-delete user or auth identity data in V1.
+Never hard-delete user or authentication identity data in V1.
 
 **Reasoning**
 
-- Enables recovery
-- Supports auditing
-- Avoids irreversible data loss
+- Enables recovery from accidental deletion
+- Supports auditing and debugging
+- Avoids irreversible data loss in early-stage systems
 
 **Implementation**
 
-- `deletedAt` timestamp
+- `deletedAt` / `disabledAt` timestamps
 - Repository-level filtering
+- Idempotent delete and disable operations
+
+---
+
+## ADR-007: Domain Validation at Repository Boundary
+
+**Decision**
+Validate all data returned from repositories against domain contracts.
+
+**Reasoning**
+
+- Ensures persistence always conforms to domain meaning
+- Prevents corrupt or partial data from leaking upward
+- Makes repository layer a hard enforcement boundary
+
+**Outcome**
+
+- Domain invariants are guaranteed at compile-time and runtime
+- Upper layers never need to defensively re-validate data
+- Persistence remains an implementation detail

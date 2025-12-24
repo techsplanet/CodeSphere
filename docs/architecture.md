@@ -3,110 +3,195 @@
 
 ## Overview
 
-CodeSphere is a production-grade collaborative DSA practice platform designed with a contract-first, layered architecture.
-The system prioritizes **clear domain boundaries**, **database agnosticism**, and **future scalability** without premature abstraction.
+CodeSphere is a production-grade collaborative DSA practice platform designed with a **contract-first, layered architecture**.
 
-The architecture follows a principle-driven approach rather than framework-driven shortcuts.
+The system prioritizes:
+
+- Clear domain boundaries
+- Database and infrastructure agnosticism
+- Scalability without premature abstraction
+- Long-term maintainability over short-term convenience
+
+The architecture is **principle-driven**, not framework-driven.
+Frameworks are treated as tools, not architectural foundations.
 
 ---
 
 ## High-Level Architecture
 
-The system is divided into clear layers:
+CodeSphere follows a strict layered model:
 
-→ UI / App Logic
-→ Domain Contracts
-→ Repositories
-→ Infrastructure (Database, Auth, External APIs)
+UI / App Logic
+	↓
+Domain Contracts
+	↓
+Repositories
+	↓
+Infrastructure (Database, Auth, External APIs)
 
-Each layer depends only on the layer below it.
+Each layer depends **only on the layer below it** and never bypasses boundaries.
+
+This prevents:
+
+- Domain logic leakage
+- Database coupling
+- Rewrite-heavy scaling
+- Fragile feature growth
 
 ---
 
 ## Core Components
 
-### 1. Web Application (apps/web)
+### 1. Web Application (`apps/web`)
 
-- Built with Next.js App Router
+The primary application is built using **Next.js App Router**.
+
+Key characteristics:
+
 - Uses Edge-compatible patterns where applicable
-- Contains no database-specific logic
-- Consumes domain contracts and repository outputs only
+- Contains **no database-specific logic**
+- Consumes only domain-safe objects returned by repositories
+- Treats APIs and repositories as black boxes
 
 Responsibilities:
 
 - Rendering UI
 - Calling API routes
 - Enforcing route-level access control
+- Handling user interaction and state
+
+The web app does **not**:
+
+- Construct database queries
+- Manipulate persistence fields
+- Define domain meaning
 
 ---
 
-### 2. Domain Contracts (packages/shared-types)
+### 2. Domain Contracts (`packages/shared-types`)
 
-- Defines stable, storage-agnostic system semantics
-- Uses Zod schemas as the single source of truth
-- Shared across UI, APIs, repositories, and future services
+This layer defines the **semantic meaning** of the system.
+
+Key properties:
+
+- Storage-agnostic
+- Runtime-agnostic
+- Framework-agnostic
+
+Implemented using:
+
+- Zod schemas as the single source of truth
+- Type inference for compile-time safety
 
 Key principle:
 
 > Domain meaning is defined once and implemented many times.
 
-This layer contains **no runtime logic**.
+This layer contains:
+
+- Entity definitions (User, Team, Sheet, Session, etc.)
+- Enums and state machines
+- Input/output contracts
+
+This layer explicitly contains **no runtime logic**.
 
 ---
 
 ### 3. Persistence Layer (Repositories)
 
-- Repositories expose intent-based data access
-- No MongoDB ObjectIds or DB-specific fields leak upward
-- Acts as the translation boundary between domain contracts and database documents
+Repositories act as the **only gateway** between domain logic and the database.
 
-Example:
+Responsibilities:
 
-- UI asks for `User`
-- Repository fetches MongoDB document
-- Repository returns domain-safe `User` object
+- Translate database documents into domain-safe objects
+- Enforce domain contracts before data leaves persistence
+- Hide database-specific fields (`_id`, `ObjectId`, soft-delete flags)
+
+Example flow:
+
+- UI requests a `User`
+- Repository queries MongoDB
+- Repository maps the document to a domain `User`
+- Repository returns a validated, domain-safe object
+
+Repositories expose **intent**, not queries.
+
+This ensures:
+
+- Database portability
+- Testable business logic
+- No persistence leakage into upper layers
 
 ---
 
-### 4. Database Infrastructure (apps/web/lib/db)
+### 4. Database Infrastructure (`apps/web/lib/db`)
+
+Database connectivity is treated as **pure infrastructure**.
+
+Implementation details:
 
 - MongoDB Node.js driver (not Mongoose)
 - Promise-based, singleton-safe connection handling
-- Treated as infrastructure, not business logic
+- Dev hot-reload and serverless safe
 
 Rationale:
 
 - Edge runtime compatibility
 - Avoids ORM-induced coupling
-- Domain contracts already exist (no schema duplication)
+- Domain schemas already exist (no duplication)
+- Clear separation between storage and meaning
+
+The database layer:
+
+- Knows how to connect
+- Knows nothing about users, teams, or sessions
 
 ---
 
 ### 5. Authentication
 
-- Implemented using Auth.js
-- Auth provider data is separated from core user identity
-- Supports multiple auth providers per user
+Authentication is implemented using **Auth.js**.
 
-Identity modeling follows real-world systems (GitHub, Slack).
+Design principles:
+
+- Authentication ≠ Identity
+- Auth provider data is volatile
+- Core user identity is stable
+
+Modeling approach:
+
+- Core user identity stored independently
+- Auth provider identities mapped separately
+- Supports multiple providers per user
+
+This mirrors real-world systems such as GitHub and Slack and avoids identity coupling.
 
 ---
 
 ### 6. External Services (Planned)
 
-- Online compiler API (e.g., Judge0)
-- AI-generated problem statements
-- Notification services
+External integrations are isolated behind service boundaries.
 
-These are accessed through isolated service modules.
+Planned services include:
+
+- Online compiler APIs (e.g., Judge0)
+- AI-assisted content generation
+- Notification and scheduling services
+
+Each service:
+
+- Is accessed through a dedicated module
+- Can be replaced without affecting domain logic
 
 ---
 
 ## Future Architecture Notes
 
 - Realtime collaboration will be implemented as a separate Node.js service
-- Database infrastructure can be extracted into a shared package once multiple consumers exist
-- Architecture intentionally avoids premature generalization
+- Database infrastructure may be extracted into a shared package once multiple consumers exist
+- The system intentionally avoids premature generalization
+
+Every abstraction must earn its existence through real usage.
 
 ---
 
@@ -114,6 +199,7 @@ These are accessed through isolated service modules.
 
 - Contracts before implementations
 - Infrastructure is replaceable
-- Business logic is testable
+- Business logic must be testable
 - Scaling should not require refactoring core domains
-  ---
+
+CodeSphere is designed to grow **without architectural regret**.

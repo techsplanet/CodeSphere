@@ -1,4 +1,3 @@
-
 # CodeSphere — Version Roadmap
 
 This document defines the intentional, staged evolution of CodeSphere.
