@@ -1,4 +1,3 @@
-
 # Architectural Decision Records (ADR)
 
 This document records key architectural decisions made during the development of CodeSphere, along with their reasoning.
@@ -137,3 +136,52 @@ Validate all data returned from repositories against domain contracts.
 - Domain invariants are guaranteed at compile-time and runtime
 - Upper layers never need to defensively re-validate data
 - Persistence remains an implementation detail
+
+---
+
+## ADR-008: Use Better Auth Instead of Auth.js
+
+##### Decision
+
+Use **Better Auth** as the authentication framework for CodeSphere instead of Auth.js.
+
+##### Context
+
+Authentication is a core infrastructural concern in CodeSphere, but it is  **not part of the domain logic** .
+
+Auth.js was evaluated due to its popularity and feature richness. However, during architectural review, it was found to introduce significant complexity and framework-specific abstraction that obscured authentication fundamentals—especially for early-stage, contract-first development.
+
+---
+
+##### Reasoning
+
+Better Auth was selected because it:
+
+* Preserves core authentication concepts (sessions, cookies, OAuth)
+* Provides a simpler and more explicit mental model
+* Avoids excessive framework-driven ceremony
+* Improves debuggability and readability
+* Enables faster, safer iteration during V1–V3
+* Keeps authentication explainable in interviews and system design discussions
+
+This decision prioritizes **conceptual clarity and correctness** over maximal configurability.
+
+---
+
+##### Trade-offs
+
+* Fewer advanced customization hooks compared to Auth.js
+* Less flexibility for highly specialized authentication workflows
+
+These trade-offs are **intentional and acceptable** for the current scope of the project.
+
+---
+
+##### Outcome
+
+* Authentication remains an infrastructure concern, not a domain dependency
+* Core domain contracts stay independent of the auth framework
+* The system remains production-grade, evolvable, and interview-defensible
+* The authentication layer can be replaced in the future without refactoring domain logic
+
+---

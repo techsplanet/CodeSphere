@@ -1,4 +1,3 @@
-
 # CodeSphere — System Architecture
 
 ## Overview
@@ -148,23 +147,57 @@ The database layer:
 
 ---
 
-### 5. Authentication
+### 5. Authentication & Authorization
 
-Authentication is implemented using **Auth.js**.
+CodeSphere uses **Better Auth** as its authentication framework.
 
-Design principles:
+Authentication is treated as **infrastructure**, not business logic.
 
-- Authentication ≠ Identity
-- Auth provider data is volatile
-- Core user identity is stable
+The system separates:
 
-Modeling approach:
+- **Authentication** → Who the user is
+- **Authorization** → What the user is allowed to do
 
-- Core user identity stored independently
-- Auth provider identities mapped separately
-- Supports multiple providers per user
+#### Why Better Auth
 
-This mirrors real-world systems such as GitHub and Slack and avoids identity coupling.
+Better Auth was chosen after evaluating Auth.js and other solutions.
+
+Key reasons:
+
+- Simpler mental model for sessions and cookies
+- Explicit, readable authentication flows
+- Faster iteration without hiding core concepts
+- Easier reasoning about security boundaries
+- Strong fit for learning-oriented, production-grade systems
+
+This choice allows the project to:
+
+- Focus on **authentication fundamentals**, not framework ceremony
+- Remain **interview-explainable**
+- Avoid unnecessary abstraction early in development
+
+#### Identity Modeling
+
+Authentication data is intentionally separated from core user identity:
+
+- `users` → domain identity
+- `auth_identities` → provider-specific authentication records
+
+This mirrors real-world systems (e.g., GitHub, Slack) and enables:
+
+- Multiple auth providers per user
+- Clean auth provider replacement
+- Minimal coupling between auth and domain logic
+
+#### Authorization Strategy
+
+Authorization is handled at multiple levels:
+
+- Route-level protection
+- Repository-level guarantees
+- Role-based access via domain contracts
+
+Authentication libraries do not define authorization rules — the domain does.
 
 ---
 
