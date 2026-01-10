@@ -1,16 +1,18 @@
 import { getDb } from "@/lib/db";
 import { AuthIdentitySchema } from "../../../../packages/shared-types";
-import { AuthRepositoryIdentity, CreateAuthIdentityInput, ResolveAuthIdentityInput } from "./auth-identity.types";
+import { AuthIdentityResolution, AuthRepositoryIdentity, CreateAuthIdentityInput, ResolveAuthIdentityInput } from "./auth-identity.types";
 import { AuthIdentityRepository } from "./auth-identity.repository";
 
 
-export const resolveAuthIdentity = async({provider, providerUserId}: ResolveAuthIdentityInput) : Promise< AuthRepositoryIdentity | null> => {
+export const resolveAuthIdentity = async({provider, providerUserId}: ResolveAuthIdentityInput) : Promise< AuthIdentityResolution> => {
 
     const db = await getDb();
 
-    const doc = await db.collection("auth_identities").findOne({provider, providerUserId, disabledAt: null});
+    const doc = await db.collection("auth_identities").findOne({provider, providerUserId});
 
-    if (!doc) return null;
+    if (!doc) return {status: "not_found"};
+
+    if (doc.disabledAt !== null) return {status: "disabled"};
 
     const domainIdentity = {
         userId : doc.userId,
@@ -20,7 +22,7 @@ export const resolveAuthIdentity = async({provider, providerUserId}: ResolveAuth
         emailVerified: doc.emailVerified
     };
 
-    return AuthIdentitySchema.parse(domainIdentity);
+    return {status: "active", identity: AuthIdentitySchema.parse(domainIdentity)};
     
 }
 

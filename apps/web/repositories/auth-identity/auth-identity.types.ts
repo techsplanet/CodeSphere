@@ -14,3 +14,9 @@ export type ResolveAuthIdentityInput = {
     provider: AuthProvidersType,
     providerUserId: string
 }
+
+
+export type AuthIdentityResolution =
+  | { status: "active"; identity: AuthRepositoryIdentity }
+  | { status: "disabled" }
+  | { status: "not_found" };
