@@ -2,7 +2,7 @@
 import { userRepository, authIdentityRepository } from "@/repositories";
 import { AuthError } from "./error";
 
-type AuthProviderIdentity = {
+export type AuthProviderIdentity = {
   provider: "google" | "github" | "linkedin";
   providerUserId: string;
   email?: string | null;

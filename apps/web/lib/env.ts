@@ -5,13 +5,19 @@ import { z } from "zod";
  * These are validated at runtime startup.
  */
 const serverEnvSchema = z.object({
-  MONGODB_URI: z
-    .url("MONGODB_URI must be a valid URL")
-    .min(1, "MONGODB_URI is required"),
+   MONGODB_URI: z.url().min(1),
+  MONGODB_DB_NAME: z.string().min(1),
 
-  MONGODB_DB_NAME: z
-    .string()
-    .min(1, "MONGODB_DB_NAME is required"),
+  // Better Auth (always required once auth exists)
+  BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
+  BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
+
+  // OAuth providers (optional at startup)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  LINKEDIN_CLIENT_ID: z.string().optional(),
+  LINKEDIN_CLIENT_SECRET: z.string().optional(),
 });
 
 
