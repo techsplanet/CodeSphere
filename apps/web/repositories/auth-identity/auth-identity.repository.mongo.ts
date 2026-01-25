@@ -30,6 +30,7 @@ export const resolveAuthIdentity = async({provider, providerUserId}: ResolveAuth
 export const createAuthIdentity = async(input: CreateAuthIdentityInput) : Promise<AuthRepositoryIdentity> => {
 
     const {
+          authUserId,
           provider,
           providerUserId,
           email,
@@ -75,7 +76,7 @@ export const createAuthIdentity = async(input: CreateAuthIdentityInput) : Promis
             emailVerified: emailVerified
         }
 
-        await db.collection("auth_identities").insertOne({ ...domainIdentity, disabledAt: null });
+        await db.collection("auth_identities").insertOne({ ...domainIdentity, authUserId, disabledAt: null });
 
         return AuthIdentitySchema.parse(domainIdentity);
 
@@ -94,9 +95,44 @@ export const disableAuthIdentity = async(input:ResolveAuthIdentityInput):Promise
     
 }
 
+export const resolveAuthIdentityByAuthUserId = async (
+{ authUserId }: { authUserId: string }
+): Promise<AuthIdentityResolution> => {
+
+
+const db = await getDb();
+
+
+const doc = await db
+.collection("auth_identities")
+.findOne({ authUserId });
+
+
+if (!doc) return { status: "not_found" };
+
+
+if (doc.disabledAt !== null) return { status: "disabled" };
+
+
+const domainIdentity = {
+userId: doc.userId,
+provider: doc.provider,
+providerUserId: doc.providerUserId,
+email: doc.email,
+emailVerified: doc.emailVerified
+};
+
+
+return {
+status: "active",
+identity: AuthIdentitySchema.parse(domainIdentity)
+};
+};
+
 
 export const authIdentityRepository = {
   resolveAuthIdentity,
+  resolveAuthIdentityByAuthUserId,
   createAuthIdentity,
   disableAuthIdentity
 } satisfies AuthIdentityRepository;
