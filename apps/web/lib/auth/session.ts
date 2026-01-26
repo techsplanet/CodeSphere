@@ -4,29 +4,27 @@ import { auth } from "./server";
 import { AuthError } from "./error";
 
 export type AuthValidatedSession = {
-    sessionId: string;
-}
+  authUserId: string;
+};
 
 export async function getSession(): Promise<AuthValidatedSession | null> {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-    if (!session){
-        return null
-    }
-    
-    return {sessionId: session.session.id}
+  if (!session) {
+    return null;
+  }
+
+  return { authUserId: session.user.id, };
 }
 
 export async function requireSession(): Promise<AuthValidatedSession> {
+  const session = await getSession();
 
-    const session = await getSession()
+  if (!session) {
+    throw new AuthError("AUTH_REQUIRED", "log-in required to perform this action");
+  }
 
-    if (!session){
-        throw new AuthError("AUTH_REQUIRED", "log-in required to perform this action");
-    }
-        
-    return session
-    
+  return session;
 }

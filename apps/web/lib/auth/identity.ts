@@ -3,6 +3,7 @@ import { userRepository, authIdentityRepository } from "@/repositories";
 import { AuthError } from "./error";
 
 export type AuthProviderIdentity = {
+  authUserId: string,
   provider: "google" | "github" | "linkedin";
   providerUserId: string;
   email?: string | null;
@@ -15,7 +16,7 @@ type ResolvedIdentity = { userId: string };
 export const resolveLoginIdentity = async (
   input: AuthProviderIdentity
 ): Promise<ResolvedIdentity> => {
-  const { provider, providerUserId, email, name, image } = input;
+  const {authUserId, provider, providerUserId, email, name, image } = input;
   const result = await authIdentityRepository.resolveAuthIdentity({
     provider,
     providerUserId,
@@ -36,6 +37,7 @@ export const resolveLoginIdentity = async (
     });
 
     const identity = await authIdentityRepository.createAuthIdentity({
+      authUserId: authUserId,
       provider: provider,
       providerUserId: providerUserId,
       email: email ?? "",
