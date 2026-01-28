@@ -3,10 +3,11 @@ import {z} from "zod";
 export enum TeamRoles {
     Owner = "owner",
     Admin = "admin",
-    Member = "member"
+    Member = "member",
+    Viewer = "viewer"
 }
 
-export const TeamRolesSchema = z.enum(["owner","admin","member"]);
+export const TeamRolesSchema = z.enum(["owner","admin","member","viewer"]);
 
 export enum SessionParticipantRole {
     Host = "host",
