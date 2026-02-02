@@ -1,7 +1,13 @@
 {
+  "name": "code-sphere",
+  "type": "module",
   "dependencies": {
     "mongodb": "^7.0.0",
     "nanoid": "^5.1.6",
     "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.0",
+    "tsx": "^4.21.0"
   }
 }

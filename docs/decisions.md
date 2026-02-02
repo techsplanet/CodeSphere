@@ -185,3 +185,79 @@ These trade-offs are **intentional and acceptable** for the current scope of the
 * The authentication layer can be replaced in the future without refactoring domain logic
 
 ---
+
+## ADR-009: Testing Framework Selection (Vitest)
+
+**Decision**
+Adopt **Vitest** as the testing framework for CodeSphere, with a deliberately restricted usage model.
+
+**Context**
+
+CodeSphere is a domain-first, monorepo-based project with strong separation between:
+
+- domain logic
+- repositories
+- infrastructure
+- application layers
+
+The project requires:
+
+- deterministic tests for pure domain logic (authorization, invariants)
+- strong TypeScript integration
+- interview-defensible tooling choices
+- long-term maintainability without premature complexity
+
+At the time of this decision:
+
+- no tests have been implemented yet
+- the authorization engine is complete and ready to be locked with tests
+- testing is being introduced incrementally for the first time in the project
+
+**Alternatives Considered**
+
+1. **Custom test runner**
+
+   - Rejected: educational but not production-grade
+   - Lacks isolation, reporting, CI ergonomics
+2. **Node.js built-in test runner (`node:test`)**
+
+   - Technically sound
+   - Rejected for now due to limited ecosystem familiarity and onboarding friction
+3. **Vitest**
+
+   - Selected
+
+**Reasoning**
+
+Vitest provides:
+
+- industry-standard testing semantics (`describe / it / expect`)
+- excellent TypeScript support
+- monorepo friendliness
+- fast feedback and clear failure output
+
+To avoid overengineering, the project intentionally limits Vitest usage.
+
+**Usage Constraints (Non-Negotiable)**
+
+Vitest will be used with the following rules:
+
+- Only `describe`, `it`, and `expect` are allowed
+- No mocks, spies, snapshots, or fake timers
+- Tests must be deterministic and side-effect free
+- Tests target pure domain logic first (authorization, repositories)
+
+This ensures learning correctness and architectural discipline without hiding behavior behind tooling magic.
+
+**Outcome**
+
+- Testing is introduced as a first-class engineering concern
+- Authorization logic will be locked with unit tests before integration
+- The testing approach remains transferable to real-world teams and interviews
+
+**Future Notes**
+
+- Additional testing layers (integration, API) may be added in later versions
+- This decision may be revisited only if project scale demands it
+
+---
