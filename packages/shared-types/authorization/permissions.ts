@@ -33,6 +33,6 @@ export enum Permission {
   TeamViewAnalytics = "team:view_analytics",
 }
 
-export const PermissionSchema = z.nativeEnum(Permission);
+export const PermissionSchema = z.enum(Permission);
 
 export type PermissionType = z.infer<typeof PermissionSchema>;

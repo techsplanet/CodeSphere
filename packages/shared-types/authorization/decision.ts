@@ -13,7 +13,7 @@ export enum AuthorizationDenyReason {
   PermissionMissing = "permission_missing",
 }
 
-export const AuthorizationDenyReasonSchema = z.nativeEnum(
+export const AuthorizationDenyReasonSchema = z.enum(
   AuthorizationDenyReason
 );
 

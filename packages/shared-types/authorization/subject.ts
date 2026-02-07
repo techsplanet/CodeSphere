@@ -10,7 +10,7 @@ export enum IdentityState {
   NotFound = "not_found",
 }
 
-export const IdentityStateSchema = z.nativeEnum(IdentityState);
+export const IdentityStateSchema = z.enum(IdentityState);
 
 /**
  * System-level roles (orthogonal to team roles).
@@ -20,7 +20,7 @@ export enum SystemRole {
   PlatformAdmin = "platform_admin",
 }
 
-export const SystemRoleSchema = z.nativeEnum(SystemRole);
+export const SystemRoleSchema = z.enum(SystemRole);
 
 /**
  * Authorization subject (actor).
