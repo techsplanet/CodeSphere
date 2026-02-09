@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { evaluateAuthorization } from "./evaluate-authorization";
-import {
-  AuthorizationDenyReason,
-  IdentityState,
-  Permission,
-} from "../../shared-types";
+import { AuthorizationDenyReason, IdentityState, Permission } from "../../shared-types";
 
 describe("authorization – identity based denial", () => {
   const cases = [
@@ -49,7 +45,112 @@ describe("authorization – identity based denial", () => {
       const decision = evaluateAuthorization(request as any);
 
       expect(decision.allowed).toBe(false);
-      expect(decision.reason).toBe(expectedReason);
+      if (!decision.allowed) {
+        expect(decision.reason).toBe(expectedReason);
+      }
     });
   });
 });
+
+describe("authorization - role based denial", () => {
+  const cases = [
+    {
+      name: "denies playlist:edit for active user without system role",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.PlaylistEdit,
+        scope: { kind: "global" },
+      },
+      expectedReason: AuthorizationDenyReason.PermissionMissing,
+    },
+    {
+      name: "denies team:delete for active user without system role",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.TeamDelete,
+        scope: { kind: "global" },
+      },
+      expectedReason: AuthorizationDenyReason.PermissionMissing,
+    },
+    {
+      name: "denies team:update_settings in global scope",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.TeamUpdateSettings,
+        scope: { kind: "global" },
+      },
+      expectedReason: AuthorizationDenyReason.PermissionMissing,
+    },
+    {
+      name: "denies discussion:moderate in global scope",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.DiscussionModerate,
+        scope: { kind: "global" },
+      },
+      expectedReason: AuthorizationDenyReason.PermissionMissing,
+    },
+  ];
+
+  cases.forEach(({ name, request, expectedReason }) => {
+    it(name, () => {
+      const decision = evaluateAuthorization(request as any);
+      expect(decision.allowed).toBe(false);
+      if (!decision.allowed) {
+        expect(decision.reason).toBe(expectedReason);
+      }
+    });
+  });
+});
+
+describe("authorization – scope based denial", () => {
+  const cases = [
+    {
+      name: "denies team-scoped permission without teamContext",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.PlaylistCreate,
+        scope: { kind: "team", teamId: "team-1" },
+      },
+      expectedReason: AuthorizationDenyReason.InvalidScope,
+    },
+    {
+      name: "denies team-scoped permission without active membership",
+      request: {
+        subject: { identityState: IdentityState.Active },
+        permission: Permission.PlaylistCreate,
+        scope: { kind: "team", teamId: "team-1" },
+        teamContext: { membershipStatus: "inactive" },
+      },
+      expectedReason: AuthorizationDenyReason.MembershipNotActive,
+    },
+  ];
+
+  cases.forEach(({ name, request, expectedReason }) => {
+    it(name, () => {
+      const decision = evaluateAuthorization(request as any);
+      expect(decision.allowed).toBe(false);
+      if (!decision.allowed) {
+        expect(decision.reason).toBe(expectedReason);
+      }
+    });
+  });
+});
+
+interface AuthorizationTestCase {
+  name: string;
+  request: any;
+  expectedReason: AuthorizationDenyReason;
+}
+
+function checkCases(cases: AuthorizationTestCase[]): void {
+  cases.forEach(({ name, request, expectedReason }) => {
+    it(name, () => {
+      const decision = evaluateAuthorization(request as any);
+      expect(decision.allowed).toBe(false);
+      if (!decision.allowed) {
+        expect(decision.reason).toBe(expectedReason);
+      }
+    });
+  });
+}
