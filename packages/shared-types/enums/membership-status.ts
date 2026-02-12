@@ -2,7 +2,7 @@ import {z} from "zod";
 
 export enum MembershipStatus {
     Invited = "invited",
-    Active = "acitve",
+    Active = "active",
     Removed = "removed"
 }
 

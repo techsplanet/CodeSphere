@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { evaluateAuthorization } from "./evaluate-authorization";
-import { AuthorizationDenyReason, IdentityState, Permission } from "../../shared-types";
+import { AuthorizationDenyReason, IdentityState, MembershipStatus, Permission, TeamRoles } from "../../shared-types";
 
 describe("authorization – identity based denial", () => {
   const cases = [
@@ -32,8 +32,8 @@ describe("authorization – identity based denial", () => {
         scope: { kind: "team", teamId: "team-1" },
         teamContext: {
           teamId: "team-1",
-          membershipStatus: "active",
-          teamRole: "member",
+          membershipStatus: MembershipStatus.Active,
+          teamRole: TeamRoles.Member,
         },
       },
       expectedReason: AuthorizationDenyReason.IdentityDisabled,
@@ -120,7 +120,7 @@ describe("authorization – scope based denial", () => {
         subject: { identityState: IdentityState.Active },
         permission: Permission.PlaylistCreate,
         scope: { kind: "team", teamId: "team-1" },
-        teamContext: { membershipStatus: "inactive" },
+        teamContext: { membershipStatus: MembershipStatus.Invited },
       },
       expectedReason: AuthorizationDenyReason.MembershipNotActive,
     },
@@ -136,21 +136,3 @@ describe("authorization – scope based denial", () => {
     });
   });
 });
-
-interface AuthorizationTestCase {
-  name: string;
-  request: any;
-  expectedReason: AuthorizationDenyReason;
-}
-
-function checkCases(cases: AuthorizationTestCase[]): void {
-  cases.forEach(({ name, request, expectedReason }) => {
-    it(name, () => {
-      const decision = evaluateAuthorization(request as any);
-      expect(decision.allowed).toBe(false);
-      if (!decision.allowed) {
-        expect(decision.reason).toBe(expectedReason);
-      }
-    });
-  });
-}
