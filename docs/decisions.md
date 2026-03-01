@@ -261,3 +261,121 @@ This ensures learning correctness and architectural discipline without hiding be
 - This decision may be revisited only if project scale demands it
 
 ---
+
+## ADR-010: File-Based Problem Bank for V1 (Static JSON Content)
+
+### Decision
+
+Store coding problems locally as structured JSON files inside the repository
+(e.g., `packages/problem-bank/`) instead of persisting problem content in MongoDB.
+
+MongoDB will store only dynamic user-generated data:
+
+- submissions
+- progress tracking
+- user data
+- identity data
+
+Problem descriptions, starter code, and hidden test cases will NOT be stored in the database for V1.
+
+---
+
+### Context
+
+CodeSphere V1 requires a deterministic, production-grade problem system.
+
+Constraints:
+
+- MongoDB Atlas free tier is being used
+- V1 is single-user focused
+- Problems are static content (not user-generated)
+- Deterministic judging is required
+- Hidden test cases must remain server-only
+
+Using the database for static problem content was evaluated but deemed unnecessary for V1.
+
+---
+
+### Reasoning
+
+Problems are static, version-controlled content — not operational data.
+
+Storing them in the database would:
+
+- Increase storage usage unnecessarily
+- Add avoidable database read overhead
+- Couple static content to persistence infrastructure
+- Introduce migration complexity for immutable content
+
+Storing problems as JSON files provides:
+
+- Zero additional database cost
+- Version control via Git
+- Deterministic, immutable problem definitions
+- Faster local development
+- Clean separation between static content and dynamic state
+- Infrastructure independence
+
+This design demonstrates strong separation of concerns:
+
+- **Content Layer** → File-based JSON problem bank
+- **Operational Layer** → MongoDB (users, submissions, progress)
+
+---
+
+### Architectural Implications
+
+1. A `ProblemRepository` abstraction will be introduced.
+2. V1 will use a `FileProblemRepository` implementation.
+3. Future versions may introduce a `MongoProblemRepository`
+   without modifying the service layer.
+4. Service layer must never expose hidden test cases.
+5. Two representations must exist:
+   - PublicProblem (no hidden data)
+   - InternalProblem (includes hidden test cases)
+
+Hidden test cases must never be bundled into client-side code.
+
+---
+
+### Trade-offs
+
+- No runtime problem creation in V1
+- No admin editing UI
+- Content updates require repository changes (intentional)
+- File reading must remain server-side only
+
+These trade-offs are acceptable for V1 and reinforce deterministic system behavior.
+
+---
+
+### Alternatives Considered
+
+1. **Store problems in MongoDB**
+
+   - Rejected due to unnecessary coupling and storage use
+   - Adds database read overhead for static content
+2. **Generate problems dynamically using LLM (Gemini)**
+
+   - Rejected due to non-determinism
+   - Cannot guarantee full edge-case coverage
+   - Legally risky when referencing third-party platforms
+   - Not production-grade for canonical judging
+3. **Mirror external platforms (LeetCode, etc.)**
+
+   - Rejected due to copyright and terms-of-service risks
+   - Creates dependency on external systems
+
+---
+
+### Outcome
+
+- V1 problem system becomes deterministic and infrastructure-light
+- Database usage is minimized and focused on dynamic state
+- Architecture remains storage-agnostic and future-extensible
+- System design remains interview-defensible and production-grade
+
+This decision strengthens architectural clarity and long-term scalability
+without increasing infrastructure cost.
+
+---
