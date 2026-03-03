@@ -6,6 +6,9 @@ import { z } from "zod";
  */
 
 export enum Permission {
+  // baseline platform access (V1)
+  PlatformAccess = "platform:access",
+
   // platform (global)
   TeamCreate = "team:create",
   TeamDelete = "team:delete",

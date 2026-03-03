@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { evaluateAuthorization } from "./evaluate-authorization";
-import { AuthorizationDenyReason, IdentityState, MembershipStatus, Permission, TeamRoles } from "../../shared-types";
+import {
+  AuthorizationDenyReason,
+  IdentityState,
+  MembershipStatus,
+  Permission,
+  TeamRoles,
+} from "../../shared-types";
 
 describe("authorization – identity based denial", () => {
   const cases = [
@@ -35,6 +41,16 @@ describe("authorization – identity based denial", () => {
           membershipStatus: MembershipStatus.Active,
           teamRole: TeamRoles.Member,
         },
+      },
+      expectedReason: AuthorizationDenyReason.IdentityDisabled,
+    },
+
+    {
+      name: "denies baseline access for disabled user",
+      request: {
+        subject: { identityState: IdentityState.Disabled },
+        permission: Permission.PlatformAccess,
+        scope: { kind: "global" },
       },
       expectedReason: AuthorizationDenyReason.IdentityDisabled,
     },

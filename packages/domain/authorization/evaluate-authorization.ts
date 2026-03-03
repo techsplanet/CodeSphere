@@ -2,6 +2,7 @@ import {
   AuthorizationRequest,
   AuthorizationDecision,
   AuthorizationDenyReason,
+  Permission,
 } from "../../shared-types";
 import {
   TEAM_ROLE_PERMISSIONS,
@@ -23,7 +24,20 @@ export function evaluateAuthorization(
     return { allowed: false, reason: AuthorizationDenyReason.IdentityDisabled };
   }
 
-  // 2️⃣ Global scope
+  // 2️⃣ Baseline V1 access (global only)
+  if (permission === Permission.PlatformAccess) {
+    if (scope.kind !== "global") {
+      return {
+        allowed: false,
+        reason: AuthorizationDenyReason.InvalidScope,
+      };
+    }
+
+    // identity already verified as active above
+    return { allowed: true };
+  }
+
+  // 3️⃣ Global scope (requires system role)
   if (scope.kind === "global") {
     if (!subject.systemRole) {
       return {
@@ -43,7 +57,7 @@ export function evaluateAuthorization(
         };
   }
 
-  // 3️⃣ Team scope
+  // 4️⃣ Team scope
   if (!teamContext) {
     return {
       allowed: false,

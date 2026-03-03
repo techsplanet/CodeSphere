@@ -19,3 +19,5 @@ pnpm-debug.log*
 .DS_Store
 .vscode/
 
+# DX scripts
+generate-snapshot.cjs
